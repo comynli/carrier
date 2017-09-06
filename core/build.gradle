@@ -1,0 +1,36 @@
+group 'io.carrier'
+version rootProject.version
+
+
+apply plugin: 'java'
+apply plugin: 'kotlin'
+apply plugin: 'idea'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
+    compile "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    compile 'io.netty:netty-all:4.1.15.Final'
+    compile 'com.esotericsoftware:kryo:4.0.1'
+    compile 'org.msgpack:jackson-dataformat-msgpack:0.8.13'
+    compile("com.fasterxml.jackson.module:jackson-module-kotlin:2.7.9") {
+        exclude group: 'org.jetbrains.kotlin'
+    }
+    compile 'com.google.inject:guice:4.1.0'
+    compile 'cglib:cglib:3.2.5'
+    compile 'org.reflections:reflections:0.9.11'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}

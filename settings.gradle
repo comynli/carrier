@@ -1,0 +1,4 @@
+rootProject.name = 'carrier'
+include 'core'
+include 'example:client', 'example:server', 'example:spi'
+
