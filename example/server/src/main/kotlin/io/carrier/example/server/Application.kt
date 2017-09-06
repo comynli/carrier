@@ -12,7 +12,7 @@ class Application {
             val server = injector.getInstance(Server::class.java)
 
             server.start(8080)
-           // Runtime.getRuntime().addShutdownHook(Thread({ server.shutdown() }))
+            Runtime.getRuntime().addShutdownHook(Thread({ server.shutdown() }))
             server.await()
         }
     }
