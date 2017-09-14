@@ -4,9 +4,18 @@
 package io.carrier.example.spi
 
 import io.carrier.rpc.Service
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
+@Path("/")
+@Produces(MediaType.APPLICATION_JSON)
 interface HelloService: Service {
-    fun sayHello(name: String): String
+    @GET
+    @Path("/say/{name}")
+    fun sayHello(@PathParam("name") name: String): String
 }
 ```
 
@@ -31,35 +40,58 @@ class HelloServiceImpl : HelloService {
 ## start server
 
 ```kotlin
-@JvmStatic
-fun main(args: Array<String>) {
-    val injector = Guice.createInjector(ServerModule(Application::class.java.`package`.name))
-    val server = injector.getInstance(Server::class.java)
+import io.carrier.rpc.server.CarrierServer
+import java.net.URI
 
-    server.start(8080)
-    Runtime.getRuntime().addShutdownHook(Thread({ server.shutdown() }))
-    server.await()
+class Application {
+    companion object {
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val server = CarrierServer(Application::class.java.`package`.name, "io.carrier.example.spi")
+
+            server.rpc(URI("rpc://0.0.0.0:10052")).http(URI("http://0.0.0.0:8080"))
+            server.start()
+            Runtime.getRuntime().addShutdownHook(Thread({ server.shutdown() }))
+            server.join()
+        }
+    }
 }
 ```
 
 ## client call
 
 ```kotlin
-@JvmStatic
-fun main(args: Array<String>) {
-    val injector = Guice.createInjector(object :AbstractModule() {
-        override fun configure() {
-            bind(Registry::class.java).to(ProviderRegistry::class.java).asEagerSingleton()
-        }
-    })
+import com.google.inject.AbstractModule
+import com.google.inject.Guice
+import io.carrier.example.spi.HelloService
+import io.carrier.rpc.client.Client
+import io.carrier.rpc.ProviderRegistry
+import io.carrier.rpc.Registry
 
-    val registry = injector.getInstance(Registry::class.java) as ProviderRegistry
-    registry.start()
-    registry.register(HelloService::class.java.name, "127.0.0.1", 8080)
-    val service = injector.getInstance(Client::class.java).create(HelloService::class.java)
-    (0 until 10).forEach {
-        println(service.sayHello("comyn"))
+class Application {
+    companion object {
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val injector = Guice.createInjector(object :AbstractModule() {
+                override fun configure() {
+                    bind(Registry::class.java).to(ProviderRegistry::class.java).asEagerSingleton()
+                }
+            })
+
+            val registry = injector.getInstance(Registry::class.java) as ProviderRegistry
+            registry.start()
+            registry.register(HelloService::class.java.name, "127.0.0.1", 10052)
+            val service = injector.getInstance(Client::class.java).create(HelloService::class.java)
+            (0 until 10).forEach {
+                println(service.sayHello("comyn"))
+            }
+            registry.shutdown()
+        }
     }
-    registry.shutdown()
 }
+```
+
+## http call
+```bash
+curl http://127.0.0.1:8080/say/comyn
 ```
