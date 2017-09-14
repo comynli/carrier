@@ -1,4 +1,4 @@
-package io.carrier.rpc.server
+package io.carrier.rpc.server.rpc
 
 import com.google.inject.Injector
 import io.carrier.rpc.codec.RequestDecoder
@@ -10,15 +10,16 @@ import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
-import javax.inject.Inject
-import javax.inject.Singleton
+import java.net.URI
 
-@Singleton
-class Server @Inject constructor(private val injector: Injector) {
+class RpcServer(private val injector: Injector, private val uri: URI) {
+    private val DEFAULT_PORT = 10052
+
     private val boss = NioEventLoopGroup()
     private val worker = NioEventLoopGroup()
     private val bootstrap = ServerBootstrap()
     private var future: ChannelFuture? = null
+
 
     init {
         bootstrap.group(boss, worker)
@@ -28,19 +29,20 @@ class Server @Inject constructor(private val injector: Injector) {
                         ch.pipeline()
                                 .addLast(RequestDecoder())
                                 .addLast(ResponseEncoder())
-                                .addLast(ServerHandler(injector))
+                                .addLast(Handler(injector))
 
                     }
                 })
-                //.option(ChannelOption.SO_BACKLOG, 2048)
-                //.childOption(ChannelOption.SO_KEEPALIVE, true)
+        .option(ChannelOption.SO_BACKLOG, 2048)
+        .childOption(ChannelOption.SO_KEEPALIVE, true)
     }
 
-    fun start(port: Int) {
-        future = bootstrap.bind(port).sync()
+    fun start() {
+        val port = if (uri.port < 0) DEFAULT_PORT else uri.port
+        future = bootstrap.bind(uri.host, port)
     }
 
-    fun await() {
+    fun join() {
         future?.await()
     }
 

@@ -19,7 +19,7 @@ class Application {
 
             val registry = injector.getInstance(Registry::class.java) as ProviderRegistry
             registry.start()
-            registry.register(HelloService::class.java.name, "127.0.0.1", 8080)
+            registry.register(HelloService::class.java.name, "127.0.0.1", 10052)
             val service = injector.getInstance(Client::class.java).create(HelloService::class.java)
             (0 until 10).forEach {
                 println(service.sayHello("comyn"))

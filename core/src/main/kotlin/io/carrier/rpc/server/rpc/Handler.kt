@@ -1,4 +1,4 @@
-package io.carrier.rpc.server
+package io.carrier.rpc.server.rpc
 
 import com.google.inject.Injector
 import io.carrier.rpc.Request
@@ -7,7 +7,7 @@ import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
 import net.sf.cglib.reflect.FastClass
 
-class ServerHandler(private val injector: Injector): SimpleChannelInboundHandler<Request>() {
+class Handler(private val injector: Injector): SimpleChannelInboundHandler<Request>() {
     override fun channelRead0(ctx: ChannelHandlerContext, msg: Request) {
         val response = try {
             Response(msg.id, handle(msg))
