@@ -2,6 +2,7 @@ package io.carrier.rpc.client
 
 import io.carrier.rpc.Registry
 import io.carrier.rpc.Request
+import io.carrier.rpc.context.Context
 import net.sf.cglib.proxy.Enhancer
 import net.sf.cglib.proxy.MethodInterceptor
 import net.sf.cglib.proxy.MethodProxy
@@ -17,7 +18,14 @@ class Client @Inject constructor(private val registry: Registry) {
         val enhancer = Enhancer()
         enhancer.setSuperclass(clazz)
         enhancer.setCallback(MethodInterceptor { _: Any, method: Method, args: Array<Any>, _: MethodProxy ->
-            val request = Request(UUID.randomUUID().toString(), method.declaringClass.name, method.name, method.parameterTypes, args)
+            val request = Request(
+                    UUID.randomUUID().toString(),
+                    method.declaringClass.name,
+                    method.name,
+                    method.parameterTypes,
+                    args,
+                    Context.current()
+            )
             val response = registry.pick(clazz.name).call(request).get()
             if (response.id != request.id) {
                 throw Exception("TODO") // TODO

@@ -10,16 +10,17 @@ import io.netty.channel.ChannelOption
 import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
+import org.slf4j.LoggerFactory
 import java.net.URI
 
 class RpcServer(private val injector: Injector, private val uri: URI) {
     private val DEFAULT_PORT = 10052
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     private val boss = NioEventLoopGroup()
     private val worker = NioEventLoopGroup()
     private val bootstrap = ServerBootstrap()
     private var future: ChannelFuture? = null
-
 
     init {
         bootstrap.group(boss, worker)
@@ -38,6 +39,7 @@ class RpcServer(private val injector: Injector, private val uri: URI) {
     }
 
     fun start() {
+        logger.info("rpc server starting")
         val port = if (uri.port < 0) DEFAULT_PORT else uri.port
         future = bootstrap.bind(uri.host, port)
     }
@@ -47,6 +49,9 @@ class RpcServer(private val injector: Injector, private val uri: URI) {
     }
 
     fun shutdown() {
-        future?.channel()?.closeFuture()?.sync()
+//        future?.channel()?.closeFuture()?.syncUninterruptibly()
+        worker.shutdownGracefully().syncUninterruptibly()
+        boss.shutdownGracefully().syncUninterruptibly()
+        logger.info("rpc server closed")
     }
 }

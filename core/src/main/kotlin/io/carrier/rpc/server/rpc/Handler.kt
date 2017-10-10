@@ -3,6 +3,7 @@ package io.carrier.rpc.server.rpc
 import com.google.inject.Injector
 import io.carrier.rpc.Request
 import io.carrier.rpc.Response
+import io.carrier.rpc.context.Context
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
 import net.sf.cglib.reflect.FastClass
@@ -18,6 +19,7 @@ class Handler(private val injector: Injector): SimpleChannelInboundHandler<Reque
     }
 
     private fun handle(request: Request): Any {
+        Context.attach(request.context)
         val clazz = Class.forName(request.service)
         val service = injector.getInstance(clazz)
         val method = FastClass.create(clazz).getMethod(request.method, request.parameters)

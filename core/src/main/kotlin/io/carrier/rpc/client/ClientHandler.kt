@@ -1,6 +1,5 @@
 package io.carrier.rpc.client
 
-import com.google.inject.Injector
 import io.carrier.rpc.Request
 import io.carrier.rpc.Response
 import io.carrier.rpc.codec.RequestEncoder
@@ -38,7 +37,6 @@ class ClientHandler(host: String, port: Int) : SimpleChannelInboundHandler<Respo
 
     override fun channelRead0(ctx: ChannelHandlerContext?, msg: Response) {
         futures.remove(msg.id)?.complete(msg)
-
     }
 
     fun call(request: Request): CompletableFuture<Response> {

@@ -1,16 +1,14 @@
 package io.carrier.rpc.codec
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.carrier.rpc.Request
 import io.netty.buffer.ByteBuf
 import io.netty.channel.ChannelHandlerContext
 import io.netty.handler.codec.ByteToMessageDecoder
-import org.msgpack.jackson.dataformat.MessagePackFactory
+import io.protostuff.ProtostuffIOUtil
+import io.protostuff.runtime.RuntimeSchema
 
 class RequestDecoder: ByteToMessageDecoder() {
-    private val mapper = ObjectMapper(MessagePackFactory()).registerModule(KotlinModule())
+    private val schema = RuntimeSchema.createFrom(Request::class.java)
 
     override fun decode(ctx: ChannelHandlerContext, input: ByteBuf, out: MutableList<Any>) {
         if (input.readableBytes() < 4) {
@@ -24,7 +22,8 @@ class RequestDecoder: ByteToMessageDecoder() {
         }
         val data = ByteArray(length)
         input.readBytes(data)
-        val request = mapper.readValue<Request>(data)
+        val request = Request()
+        ProtostuffIOUtil.mergeFrom(data, request, schema)
         out.add(request)
     }
 }
